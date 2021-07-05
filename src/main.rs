@@ -1,3 +1,5 @@
+#![feature(assert_matches)]
+
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -26,13 +28,22 @@ impl Device {
 
     pub fn change(&mut self, percent: f32) {
         let counts = percent / 100.0 * self.max as f32;
-        self.current += counts as u32;
+        let counts = counts + self.current as f32;
+        self.current = match counts {
+            c if c < 0.0 => 0,
+            c if c >= self.max as f32 => self.max,
+            c => c as u32
+        };
     }
 
     pub fn set(&mut self, percent: f32) {
         let percent = percent.min(100.0);
         let counts = percent / 100.0 * self.max as f32;
-        self.current = counts as u32;
+        self.current = match counts {
+            c if c < 0.0 => 0,
+            c if c >= self.max as f32 => self.max,
+            c => c as u32
+        };
     }
 
     pub fn apply(&mut self, change: Change) {
@@ -87,6 +98,7 @@ fn get_devices(path: impl AsRef<Path>) -> anyhow::Result<Vec<Device>> {
         .collect()
 }
 
+#[derive(Debug)]
 pub enum Change {
     Absolute(f32),
     Relative(f32),
@@ -207,8 +219,26 @@ mod tests {
     }
 
     #[test]
+    fn decrease_percent() {
+        let mut dev = read_device("tests/backlight/intel_backlight").unwrap();
+        assert!(dev.percent() == 27.95389);
+        dev.change(-10.0);
+        println!("{}", dev.percent());
+        assert!(dev.percent() == 17.939482);
+    }
+
+    #[test]
     fn read_all_devices() {
         let devs = get_devices("tests/backlight").unwrap();
         assert!(devs.len() == 1);
+    }
+
+    #[test]
+    fn inc_change() {
+        let c = parse_change("+10").unwrap();
+        assert_matches!(c, Change::Relative(10.0f32));
+
+        let c = parse_change("-10").unwrap();
+        assert_matches!(c, Change::Relative(-10.0f32));
     }
 }
