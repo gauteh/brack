@@ -1,3 +1,5 @@
+[![Crates.io](https://img.shields.io/crates/v/brack.svg)](https://crates.io/crates/brack)
+
 # brack
 
 tune the backlight!
