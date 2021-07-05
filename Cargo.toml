@@ -1,5 +1,8 @@
 [package]
 name = "brack"
+description = "tune backlight"
+repository = "https://github.com/gauteh/brack"
+license = "MIT"
 version = "0.1.0"
 edition = "2018"
 
