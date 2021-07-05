@@ -236,9 +236,9 @@ mod tests {
     #[test]
     fn inc_change() {
         let c = parse_change("+10").unwrap();
-        assert_matches!(c, Change::Relative(10.0f32));
+        assert_matches!(c, Change::Relative(v) if v == 10.0);
 
         let c = parse_change("-10").unwrap();
-        assert_matches!(c, Change::Relative(-10.0f32));
+        assert_matches!(c, Change::Relative(v) if v == -10.0);
     }
 }
