@@ -54,9 +54,7 @@ impl Device {
     }
 
     pub fn write(&self) -> anyhow::Result<()> {
-        let mut curf = self.file.to_path_buf();
-        curf.push("brightness");
-        Ok(fs::write(&curf, &format!("{}", self.current))?)
+        Ok(fs::write(self.file.join("brightness"), &format!("{}", self.current))?)
     }
 }
 
@@ -65,13 +63,8 @@ fn read_device(path: impl AsRef<Path>) -> anyhow::Result<Device> {
     let name = path.file_name().ok_or(anyhow!("no device name"))?;
     let name = name.to_string_lossy().to_string();
 
-    let mut maxf = path.to_path_buf();
-    let mut curf = path.to_path_buf();
-    maxf.push("max_brightness");
-    curf.push("brightness");
-
-    let max = fs::read_to_string(maxf)?;
-    let current = fs::read_to_string(curf)?;
+    let max = fs::read_to_string(path.join("max_brightness"))?;
+    let current = fs::read_to_string(path.join("brightness"))?;
 
     let max: u32 = max.trim().parse()?;
     let current: u32 = current.trim().parse()?;
@@ -90,10 +83,7 @@ fn get_devices(path: impl AsRef<Path>) -> anyhow::Result<Vec<Device>> {
 
     glob::glob(&format!("{}/*", path))?
         .filter_map(Result::ok)
-        .filter_map(|path| match fs::metadata(&path).map(|m| m.is_dir()) {
-            Ok(true) => Some(path),
-            _ => None,
-        })
+        .filter(|path| fs::metadata(&path).map(|m| m.is_dir()).unwrap_or(false))
         .map(read_device)
         .collect()
 }
@@ -135,7 +125,7 @@ fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
 
     {
-        if args.iter().find(|s| *s == "-h" || *s == "--help").is_some() {
+        if args.iter().any(|s| *s == "-h" || *s == "--help") {
             usage();
             return Ok(());
         }
