@@ -17,7 +17,14 @@ struct Device {
 
 impl std::fmt::Display for Device {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:15} {}% ({}/{})", self.name, self.percent(), self.current, self.max)
+        write!(
+            f,
+            "{:15} {}% ({}/{})",
+            self.name,
+            self.percent(),
+            self.current,
+            self.max
+        )
     }
 }
 
@@ -32,7 +39,7 @@ impl Device {
         self.current = match counts {
             c if c < 0.0 => 0,
             c if c >= self.max as f32 => self.max,
-            c => c as u32
+            c => c as u32,
         };
     }
 
@@ -42,7 +49,7 @@ impl Device {
         self.current = match counts {
             c if c < 0.0 => 0,
             c if c >= self.max as f32 => self.max,
-            c => c as u32
+            c => c as u32,
         };
     }
 
@@ -54,13 +61,16 @@ impl Device {
     }
 
     pub fn write(&self) -> anyhow::Result<()> {
-        Ok(fs::write(self.file.join("brightness"), &format!("{}", self.current))?)
+        Ok(fs::write(
+            self.file.join("brightness"),
+            &format!("{}", self.current),
+        )?)
     }
 }
 
 fn read_device(path: impl AsRef<Path>) -> anyhow::Result<Device> {
     let path = path.as_ref();
-    let name = path.file_name().ok_or(anyhow!("no device name"))?;
+    let name = path.file_name().ok_or_else(|| anyhow!("no device name"))?;
     let name = name.to_string_lossy().to_string();
 
     let max = fs::read_to_string(path.join("max_brightness"))?;
@@ -115,10 +125,10 @@ fn usage() {
     println!();
     println!("Examples:");
     println!();
-    println!("brack +10 # increase brightness with 10%");
-    println!("brack -10 # decrease brightness with 10%");
-    println!("brack 50 # set brightness to 50%");
-    println!("brack intel_backlight +10 # increase brightness with 10% on the intel_backlight device");
+    println!("brack +10                     # increase brightness with 10%");
+    println!("brack -10                     # decrease brightness with 10%");
+    println!("brack 50                      # set brightness to 50%");
+    println!("brack intel_backlight +10     # increase brightness with 10% on the intel_backlight device");
 }
 
 fn main() -> anyhow::Result<()> {
@@ -150,34 +160,39 @@ fn main() -> anyhow::Result<()> {
     let mut devices = get_devices("/sys/class/backlight")?;
 
     match (device, change) {
+        // List devices
         (None, None) => {
-            // List devices
             for dev in devices {
                 println!("{}", dev);
             }
         }
-        (Some(dev), None) => match devices.iter().find(|d| d.name == dev) {
-            Some(dev) => println!("{}", dev),
-            _ => (),
-        },
-        (Some(dev), Some(change)) => match devices.iter_mut().find(|d| d.name == dev) {
-            Some(dev) => {
+        // List single device
+        (Some(dev), None) => {
+            if let Some(dev) = devices.iter().find(|d| d.name == dev) {
+                println!("{}", dev)
+            }
+        }
+        // Change specified device
+        (Some(dev), Some(change)) => {
+            if let Some(dev) = devices.iter_mut().find(|d| d.name == dev) {
                 let change = parse_change(&change)?;
                 dev.apply(change);
                 dev.write()?;
                 println!("{}", dev)
             }
-            _ => (),
-        },
-        (None, Some(change)) => match devices.iter_mut().find(|d| d.name == "intel_backlight" || d.name == "radeon_backlight" ) {
-            Some(dev) => {
+        }
+        // Change default device
+        (None, Some(change)) => {
+            if let Some(dev) = devices
+                .iter_mut()
+                .find(|d| d.name == "intel_backlight" || d.name == "radeon_backlight")
+            {
                 let change = parse_change(&change)?;
                 dev.apply(change);
                 dev.write()?;
                 println!("{}", dev)
             }
-            _ => (),
-        },
+        }
     }
 
     Ok(())
