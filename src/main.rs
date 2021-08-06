@@ -61,10 +61,10 @@ impl Device {
     }
 
     pub fn write(&self) -> anyhow::Result<()> {
-        Ok(fs::write(
+        fs::write(
             self.file.join("brightness"),
             &format!("{}", self.current),
-        )?)
+        ).map_err(Into::into)
     }
 }
 
