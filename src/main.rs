@@ -170,6 +170,8 @@ fn main() -> anyhow::Result<()> {
         (Some(dev), None) => {
             if let Some(dev) = devices.iter().find(|d| d.name == dev) {
                 println!("{}", dev)
+            } else {
+                println!("Device not found: {dev}.");
             }
         }
         // Change specified device
@@ -179,18 +181,22 @@ fn main() -> anyhow::Result<()> {
                 dev.apply(change);
                 dev.write()?;
                 println!("{}", dev)
+            } else {
+                println!("Device not found: {dev}.");
             }
         }
         // Change default device
         (None, Some(change)) => {
             if let Some(dev) = devices
                 .iter_mut()
-                .find(|d| d.name == "intel_backlight" || d.name == "radeon_backlight")
+                .find(|d| d.name == "intel_backlight" || d.name == "radeon_backlight" || d.name == "acpi_video0")
             {
                 let change = parse_change(&change)?;
                 dev.apply(change);
                 dev.write()?;
                 println!("{}", dev)
+            } else {
+                println!("No default device found.");
             }
         }
     }
