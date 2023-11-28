@@ -42,3 +42,11 @@ and make sure you add the user to the `video` group:
 ```
 $ sudo gpasswd -a $USER video
 ```
+
+## I3 configuration
+
+```
+bindsym XF86MonBrightnessUp exec brack +10 # increase screen brightness
+bindsym XF86MonBrightnessDown exec brack -10 # decrease screen brightness
+```
+
