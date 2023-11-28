@@ -25,7 +25,7 @@ brack intel_backlight +10 # increase brightness with 10% on the intel_backlight 
 
 # User access to the backlight
 
-Add a [udev rule](https://superuser.com/questions/484678/cant-write-to-file-sys-class-backlight-acpi-video0-brightness-ubuntu), e.g.: [`/etc/udev/rules.d/backlight.rules`](./backlight.rules):
+Replace `<vendor>` with the name in /sys/class/blacklight, e.g. `acpi_video0` and add a [udev rule](https://superuser.com/questions/484678/cant-write-to-file-sys-class-backlight-acpi-video0-brightness-ubuntu), e.g.: [`/etc/udev/rules.d/backlight.rules`](./backlight.rules):
 ```
 ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="<vendor>", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness"
 ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="<vendor>", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
