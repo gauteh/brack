@@ -23,3 +23,16 @@ brack 50 # set brightness to 50%
 brack intel_backlight +10 # increase brightness with 10% on the intel_backlight device
 ```
 
+# User access to the backlight
+
+Add a [udev rule](https://superuser.com/questions/484678/cant-write-to-file-sys-class-backlight-acpi-video0-brightness-ubuntu), e.g.: [`/etc/udev/rules.d/backlight.rules`](./backlight.rules):
+```
+ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="<vendor>", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness"
+ACTION=="add", SUBSYSTEM=="backlight", KERNEL=="<vendor>", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
+```
+
+and make sure you add the user to the `video` group:
+
+```
+$ sudo gpasswd -a $USER video
+```
